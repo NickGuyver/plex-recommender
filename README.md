@@ -19,7 +19,8 @@ From there, all you have to do is run the script and select the previously creat
 
 
 Example usage and output:
-> python .\recommender-fast.py
+```
+python .\recommender-fast.py
 
 (R)ecommended - From "recommended" list on movie page.
 (S)imilar - From similar keywords and genres.
@@ -52,3 +53,4 @@ Top 10 recommendations:
         Recommended - 61 times
 
 <snip>
+```
