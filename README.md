@@ -20,7 +20,7 @@ From there, all you have to do is run the script and select the previously creat
 
 Example usage and output:
 ```
-python .\recommender-fast.py
+python .\recommender.py
 
 (R)ecommended - From "recommended" list on movie page.
 (S)imilar - From similar keywords and genres.
