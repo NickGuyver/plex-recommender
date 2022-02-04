@@ -8,7 +8,7 @@ unknown = set()
 
 #get choices from user
 def getUserInput():
-    print('\n(R)ecommended - From "recommended" list on movie page.')
+    print('\n(R)ecommended - From "recommended" list on media page.')
     print('(S)imilar - From similar keywords and genres.')
     recommendation_type = input('Select recommendation type (R/S):\n\t').lower()
     
@@ -16,6 +16,13 @@ def getUserInput():
         recommendation_type = 'r'
     else:
         recommendation_type = 's'
+        
+    media_type = input('Enter media type (Movie/TV):\n\t').lower()
+    
+    if media_type.startswith('m'):
+        media_type = 'movie'
+    else:
+        media_type = 'tv'
         
     num_recommendations = int(input('Enter number of recommendations (range 1-20):\n\t'))
     
@@ -26,7 +33,7 @@ def getUserInput():
     
     api_key = input('Enter TMDB API key:\n\t')
     
-    return num_recommendations, api_key, recommendation_type
+    return num_recommendations, api_key, recommendation_type, media_type
 
 #progress bar from https://stackoverflow.com/a/34325723
 def progressBar(iterable):
@@ -60,7 +67,7 @@ def progressBar(iterable):
     print()
 
 #get list of titles and years
-def getMovieList():
+def getMediaList():
     from json import load
     
     #using set to ensure no duplicates
@@ -68,7 +75,7 @@ def getMovieList():
     
     #added replace because Windows drag&drop added quotes which broke filename as read by Python
     tautulli_file = input('Enter full path to Tautulli metadata output .json with guids.id field:\n\t').replace('"', '')
-    print(f'\n\nExtracting TMDB IDs from list of movies at:\n\t{tautulli_file}...')
+    print(f'\n\nExtracting TMDB IDs from list of media at:\n\t{tautulli_file}...')
     
     with open(tautulli_file, newline='', encoding = 'utf-8') as tautulli:
         tautulli_json = load(tautulli)
@@ -77,80 +84,106 @@ def getMovieList():
         for result in tautulli_json:
             for guid in result['guids']:
                 if guid['id'].startswith('tmdb'):
-                    id_set.add(result['guids'][1]['id'].split('//')[1])
+                    id_set.add(guid['id'].split('//')[1])
 
     return id_set
 
 #get recommendations from id
-def getRecommendations(movie_id):
+def getRecommendations(media_id, num_recommendations):
     #using list to track frequency of duplicates
     recommend_list = []
     
-    #generate tmdb api get similar movies query
+    #generate tmdb api get similar movie/tv query
     if recommendation_type == 'r':
-        tmdb_query = f'https://api.themoviedb.org/3/movie/{movie_id}/recommendations?api_key={api_key}'
+        tmdb_query = f'https://api.themoviedb.org/3/{media_type}/{media_id}/recommendations?api_key={api_key}'
     
-    #generate tmdb api get recommended movies query
+    #generate tmdb api get recommended movie/tv query
     else:
-        tmdb_query = f'https://api.themoviedb.org/3/movie/{movie_id}/similar?api_key={api_key}'
+        tmdb_query = f'https://api.themoviedb.org/3/{media_type}/{media_id}/similar?api_key={api_key}'
     
     with urlopen(tmdb_query) as response:
         html = response.read().decode('utf-8')
         tmdb_json = loads(html)
         
+        total_results = int(tmdb_json['total_results'])
+        
+        #some media has no recommendations
+        if total_results == 0:
+            return [], total_results
+        
+        #only go up to the number of results if less than the requested recommendations
+        elif total_results <= num_recommendations:
+            num_recommendations = total_results
+        
         for results in range(num_recommendations):
-            try:
-                tmdb_rec = f"{tmdb_json['results'][results]['id']}"
-                
-                if tmdb_rec not in owned:
-                    recommend_list.append(tmdb_rec)
+            tmdb_rec = f"{tmdb_json['results'][results]['id']}"
             
-            #some movies have no recommendations
-            except IndexError:
-                return 0
+            if tmdb_rec not in owned:
+                recommend_list.append(tmdb_rec)
     
-    return recommend_list
+    return recommend_list, total_results
 
 #get movies details from recommended list
-def getMovie(movie_id, frequency):
+def getMovie(media_id, frequency):
     #generate tmdb api get movie details query
-    tmdb_query = f'https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}'
+    tmdb_query = f'https://api.themoviedb.org/3/movie/{media_id}?api_key={api_key}'
 
     with urlopen(tmdb_query) as response:
         html = response.read().decode('utf-8')
         tmdb_json = loads(html)
         
         print(f"\tMovie - {tmdb_json['title']} ({tmdb_json['release_date'].split('-')[0]})")
-        print(f'\tTMDB - https://www.themoviedb.org/movie/{movie_id}')
+        print(f'\tTMDB - https://www.themoviedb.org/movie/{media_id}')
         print(f"\tIMDB - https://www.imdb.com/title/{tmdb_json['imdb_id']}/")
+        print(f'\tRecommended - {frequency} times\n')
+        
+    return
+    
+#get movies details from recommended list
+def getShow(media_id, frequency):
+    #generate tmdb api get tv details query
+    tmdb_query = f'https://api.themoviedb.org/3/tv/{media_id}?api_key={api_key}'
+
+    with urlopen(tmdb_query) as response:
+        html = response.read().decode('utf-8')
+        tmdb_json = loads(html)
+        
+        print(f"\tShow - {tmdb_json['name']} ({tmdb_json['first_air_date'].split('-')[0]})")
+        print(f'\tTMDB - https://www.themoviedb.org/tv/{media_id}')
         print(f'\tRecommended - {frequency} times\n')
         
     return
 
 
-num_recommendations, api_key, recommendation_type = getUserInput()
+num_recommendations, api_key, recommendation_type, media_type = getUserInput()
 
-owned = list(getMovieList())
+owned = list(getMediaList())
 
-print(f"\nGetting {num_recommendations} TMDB recommendations for each of the {len(owned)} movie IDs...")
+print(f"\nGetting {num_recommendations} TMDB recommendations for each of the {len(owned)} IDs...")
 
 for index in progressBar(range(len(owned))):
-    found = getRecommendations(owned[index])
+    found, total_results = getRecommendations(owned[index], num_recommendations)
     
-    if found:
+    #add to the missing list if there were recommendations found
+    if total_results > 0:
         missing.extend(found)
     
+    #if no recommendations came back, pull the media details and let the user know
     else:
-        tmdb_query = f'https://api.themoviedb.org/3/movie/{owned[index]}?api_key={api_key}'
-
+        tmdb_query = f'https://api.themoviedb.org/3/{media_type}/{owned[index]}?api_key={api_key}'
+        
         with urlopen(tmdb_query) as response:
             html = response.read().decode('utf-8')
             tmdb_json = loads(html)
             
-            unknown.add(f"\t{tmdb_json['title']} ({tmdb_json['release_date'].split('-')[0]})")
-    
+            #tv shows use slightly different key naming 
+            if media_type == 'movie':
+                unknown.add(f"\t{tmdb_json['title']} ({tmdb_json['release_date'].split('-')[0]})")
+            
+            else:
+                unknown.add(f"\t{tmdb_json['name']} ({tmdb_json['first_air_date'].split('-')[0]})")
 if unknown:
-    print(f"\n{len(unknown)} movies with no recommendations:")
+    print(f"\n{len(unknown)} titles with no recommendations:")
     
     for index in unknown:
         print(index)
@@ -161,5 +194,10 @@ recommendation_count = f'{len(missing)}'
 print(f'\nTotal recommendations:\n\t{recommendation_count}')
 print(f"\nTop {num_recommendations} recommendations:")
 
-for index in range(0, len(missing_counter)):
-    getMovie(missing_counter[index][0], f'{missing_counter[index][1]}')
+if media_type == 'movie':
+    for index in range(0, len(missing_counter)):
+        getMovie(missing_counter[index][0], f'{missing_counter[index][1]}')
+        
+else:
+    for index in range(0, len(missing_counter)):
+        getShow(missing_counter[index][0], f'{missing_counter[index][1]}')
