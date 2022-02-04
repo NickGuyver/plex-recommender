@@ -40,8 +40,6 @@ Extracting TMDB IDs from list of media at:
         .\Library - Movies - All [1].json...
 
 Getting 10 TMDB recommendations for each of the 1166 IDs...
-0       Progress: |███████████████████████-------| 79.76% Complete
-68306
         Progress: |██████████████████████████████| 100.00% Complete
 
 1 titles with no recommendations:
