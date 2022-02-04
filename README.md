@@ -1,6 +1,6 @@
 # plex-recommender
 Description:
-Get movie recommendations based on your current PleX library. It will go through each movie in the list, pull the number of recommendations you request, tally them, and then print out an ordered list of the most recommended movies based on your inputs.
+Get movie/tv recommendations based on your current PleX library. It will go through each movie in the list, pull the number of recommendations you request, tally them, and then print out an ordered list of the most recommended movies based on your inputs.
 
 
 Notes:
@@ -22,10 +22,12 @@ Example usage and output:
 ```
 python .\recommender.py
 
-(R)ecommended - From "recommended" list on movie page.
+(R)ecommended - From "recommended" list on media page.
 (S)imilar - From similar keywords and genres.
 Select recommendation type (R/S):
         s
+Enter media type (Movie/TV):
+        m
 Enter number of recommendations (range 1-20):
         10
 Enter TMDB API key:
@@ -34,23 +36,25 @@ Enter full path to Tautulli metadata output .json with guids.id field:
         ".\Library - Movies - All [1].json"
 
 
-Extracting TMDB IDs from list of movies at:
+Extracting TMDB IDs from list of media at:
         .\Library - Movies - All [1].json...
 
-Getting 10 TMDB recommendations for each of the 1166 movie IDs...
+Getting 10 TMDB recommendations for each of the 1166 IDs...
+0       Progress: |███████████████████████-------| 79.76% Complete
+68306
         Progress: |██████████████████████████████| 100.00% Complete
 
-1 movies with no recommendations:
+1 titles with no recommendations:
         Zombie Cop (1991)
 
 Total recommendations:
-        8224
+        7947
 
 Top 10 recommendations:
-        Movie - The Crow: Salvation (2000)
-        TMDB - https://www.themoviedb.org/movie/9456
-        IMDB - https://www.imdb.com/title/tt0132910/
-        Recommended - 61 times
+        Movie - Death Race (2008)
+        TMDB - https://www.themoviedb.org/movie/10483
+        IMDB - https://www.imdb.com/title/tt0452608/
+        Recommended - 125 times
 
 <snip>
 ```
