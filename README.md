@@ -1,6 +1,6 @@
 # plex-recommender
 Description:
-Get movie/tv recommendations based on your current PleX library. It will go through each movie in the list, pull the number of recommendations you request, tally them, and then print out an ordered list of the most recommended movies based on your inputs.
+Get movie/tv recommendations based on your current PleX library. It will go through each item in the list, pull the number of recommendations you request, tally them, and then print out an ordered list of the most recommended items based on your inputs.
 
 
 Notes:
