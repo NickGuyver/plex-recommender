@@ -116,7 +116,13 @@ def getRecommendations(media_id, num_recommendations):
             num_recommendations = total_results
         
         for results in range(num_recommendations):
-            tmdb_rec = f"{tmdb_json['results'][results]['id']}"
+            #total_results returned from tmdb api is not always correct
+            try:
+                tmdb_rec = f"{tmdb_json['results'][results]['id']}"
+            except IndexError:
+                print(tmdb_query)
+                total_results = results
+                break
             
             if tmdb_rec not in owned:
                 recommend_list.append(tmdb_rec)
